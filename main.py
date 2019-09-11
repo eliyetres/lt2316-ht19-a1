@@ -12,11 +12,9 @@ from read import read_labels, open_datafiles
 
 dirr = dirr = "data/" # Data directory
 
-languages = ["Swedish", "Danish", "Bokmål", "Icelandic", "Faroese", "English", "Welsh", "Cornish", "Breton", "Cornish"] # Selected languages
+languages = ["Swedish", "Danish", "Bokmål", "Icelandic", "Faroese", "English", "Welsh", "Cornish", "Breton", "Old English "] # Selected languages
 
 lan = read_labels(dirr, "labels.csv", languages) # Language codes
-
-
 
 x_train, y_train = open_datafiles(dirr, "y_train.txt", "x_train.txt",lan)
 
