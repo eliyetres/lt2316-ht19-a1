@@ -37,6 +37,13 @@ def open_datafiles(file_dir, lang_labels, lang_data, selected_codes):
                 data_line = re.sub(r'(\n)', '', data_line)
                 if label_line in selected_codes:  # Get selected languages
 
+                    if len(data_line) < 100: # remove any instances that have less than 100 characters
+                        return
+
+                    data_line = data_line.split(" ")
+                    data_line = [x for x in data_line if x]
+                    data_line = data_line[:100] # ignore everything past the first 100 characters 
+
                     y = label_line
                     x = data_line
 
@@ -48,6 +55,18 @@ def open_datafiles(file_dir, lang_labels, lang_data, selected_codes):
 
     return x_data, y_data
 
+
+
+def match_labels(file_dir, filename, lan):
+    with open(file_dir + filename, encoding='utf-8') as file_labels:
+        csv_reader = csv.reader(file_labels, delimiter=';')
+        next(csv_reader)
+        for row in csv_reader:
+            lang = row[1]
+            code = row[0]
+            if lan == code:
+                print(lang)
+                return lang
 
 #read_labels(dirr, "labels.csv", languages)
 #x_train, y_train = open_datafiles(dirr, "y_train.txt", "x_train.txt")
