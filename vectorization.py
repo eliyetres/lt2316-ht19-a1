@@ -5,8 +5,8 @@ import numpy as np
 def make_vectors(x_data, y_data):
     vectorizer = TfidfVectorizer(lowercase=False)
     x_data = vectorizer.fit_transform(x_data)
-    y_data = vectorizer.fit_tranaform(y_data)
+    y_data = vectorizer.fit_transform(y_data)
 
-    X = allvectors.todense()
+    X = x_data.todense()
     X = X.tolist()
     X = np.asarray(X)
