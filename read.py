@@ -1,6 +1,7 @@
 import csv
 import re
 
+
 def read_labels(file_dir, filename, selected_languages):
     """
     Gets the language labels from the selected labels (file type csv)
@@ -37,12 +38,16 @@ def open_datafiles(file_dir, lang_labels, lang_data, selected_codes):
                 data_line = re.sub(r'(\n)', '', data_line)
                 if label_line in selected_codes:  # Get selected languages
 
-                    if len(data_line) < 100: # remove any instances that have less than 100 characters
+                    if len(
+                            data_line
+                    ) < 100:  # remove any instances that have less than 100 characters
                         return
 
-                    data_line = data_line.split(" ")
-                    data_line = [x for x in data_line if x]
-                    data_line = data_line[:100] # ignore everything past the first 100 characters 
+                    #data_line = data_line.split(" ")
+                    #data_line = [x for x in data_line if x]
+                    data_line = [ch for ch in data_line]
+                    data_line = data_line[:
+                                          100]  # ignore everything past the first 100 characters
 
                     y = label_line
                     x = data_line
@@ -51,10 +56,9 @@ def open_datafiles(file_dir, lang_labels, lang_data, selected_codes):
                     y_data.append(y)
 
     #for y,x in  zip( y_train[:10], x_train[:10]):
-    #print(y, "::::", x)
+    print(y, "::::", x)
 
     return x_data, y_data
-
 
 
 def match_labels(file_dir, filename, lan):
@@ -68,6 +72,10 @@ def match_labels(file_dir, filename, lan):
                 print(lang)
                 return lang
 
-#read_labels(dirr, "labels.csv", languages)
-#x_train, y_train = open_datafiles(dirr, "y_train.txt", "x_train.txt")
-#x_test, y_test = open_datafiles(dirr, "y_test.txt", "x_test.txt")
+def test_read():
+    d = "data/"
+    l = read_labels(d, "labels.csv", ["Swedish", "Bokmål"])
+    x_train, y_train = open_datafiles(d, "y_train.txt", "x_train.txt", l)
+    x_test, y_test = open_datafiles(d, "y_test.txt", "x_test.txt")
+
+#test_read()
