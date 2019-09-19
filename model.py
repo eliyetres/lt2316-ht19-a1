@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
-from main import x_train, y_train 
+import numpy as np
 import math
 
 """ 

@@ -18,10 +18,7 @@ data_dir = "data/"  # Data directory
 
 
 # Choose any 10 languages and document them in your readme. Split out those languages into smaller training and test files and submit them with your project.
-languages = [
-    "Swedish", "Danish", "Bokmål", "Icelandic", "Faroese", "English", "Welsh",
-    "Cornish", "Breton", "Old English "
-]  # Selected languages
+languages = ["Swedish", "Danish", "Bokmål", "Icelandic", "Faroese", "English", "Welsh", "German", "Old English ", "Arabic"] # Selected languages
 
 lan = read_labels(data_dir, "labels.csv", languages)  # Language codes
 

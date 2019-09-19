@@ -1,12 +1,13 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from gensim.models.keyedvectors import KeyedVectors
+import random
 import numpy as np
+from nltk.tokenize import WordPunctTokenizer
 
-def make_vectors(x_data, y_data):
-    vectorizer = TfidfVectorizer(lowercase=False)
-    x_data = vectorizer.fit_transform(x_data)
-    y_data = vectorizer.fit_transform(y_data)
-
-    X = x_data.todense()
-    X = X.tolist()
-    X = np.asarray(X)
+def load_data(y_datafile,x_datafile):
+    Y = []
+    X = []
+    with open(y_datafile, encoding='utf-8') as labels:
+        with open(x_datafile, encoding='utf-8') as data:
+            for label_line, data_line in zip(labels, data):
+                Y.append(label_line)
+                X.append(data_line)
+    return Y, X
