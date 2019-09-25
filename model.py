@@ -41,13 +41,11 @@ class GRUNet(nn.Module):
 
         self.learning_rate = lr
         self.device = torch.device(device)
-
-        self.hidden_size = hidden_size
-        self.n_layers = n_layers
         
-        self.gru = nn.GRU(input_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
-        self.fc = nn.Linear(hidden_size, output_size)
-        self.tanh = nn.Tanh()
+        self.gru = nn.GRU(input_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)        
+        self.linear1 = nn.Linear(self.hidden_size, self.hidden_size)
+        self.linear2 = nn.Linear(self.hidden_size, self.output_size)
+        self.tanh = nn.Tanh() # or softmax?
         
     def forward(self, x, h):
         out, h = self.gru(x, h)
@@ -58,18 +56,6 @@ class GRUNet(nn.Module):
         weight = next(self.parameters()).data
         hidden = weight.new(self.n_layers, batch_size, self.hidden_size).zero_().to(device)
         return hidden
-
-
-    def make_tensor(self, X, Y):
-        if self.device == "cpu":
-            # Using CPU  
-            X = torch.Tensor(X)
-            Y = torch.Tensor(Y)
-        else:
-            # Using GPU                             
-            X = torch.as_tensor(X, dtype=torch.float, device=self.device)
-            Y = torch.as_tensor(Y, dtype=torch.float, device=self.device)
-        return X, Y
 
 
     def train(train_loader, learning_rate, epochs=5):
