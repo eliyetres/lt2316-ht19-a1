@@ -1,6 +1,6 @@
-import re
-import csv
 import argparse
+import csv
+import re
 
 languages = ["Swedish", "Danish", "Bokmål", "Icelandic", "Faroese", "English", "Welsh", "German", "Old English ", "Arabic"] # Selected languages
 l = "swe,cym,ang,ara,dan,eng,nob,isl,fao,deu"
@@ -12,18 +12,13 @@ def create_datafiles(y_data, x_data, filename_y, filename_x, lang_codes):
     with open(y_data, encoding='utf-8') as labels:
         with open(x_data, encoding='utf-8') as data:
             for label_line, data_line in zip(labels, data):
-
                 file_x = open(filename_x,"a+", encoding='utf-8')
                 file_y = open(filename_y,"a+", encoding='utf-8') 
-
                 label_line = re.sub(r'(\n)', '', label_line)  # Remove newlines
                 data_line = re.sub(r'(\n)', '', data_line)
-
                 if label_line in lang_codes:  # Get selected languages
-
                     if len(data_line) < 100:  # remove any instances that have less than 100 characters
                         return
-
                     data_line = [ch for ch in data_line]
                     data_line = data_line[:100]  # ignore everything past the first 100 characters
                     data_line = ("").join(data_line) + "\n"
@@ -59,8 +54,6 @@ parser.add_argument("y_new", type=str, nargs='?', help="File name of the new lan
 parser.add_argument("x_new", type=str, nargs='?', help="File name of the new language data")
 parser.add_argument("languages", type=str, nargs='?', help="Selected languages codes separated by space.")
 
-
-
 args = parser.parse_args()
 
 if args.lang_labels:
@@ -71,7 +64,3 @@ languages = args.languages.split(",")
 print(len(languages), "languages selected.")
 if len(languages) < 10:
     exit("Error: less than 10 languages selected")
-
-
-
-create_datafiles(args.y_file, args.x_file, args.y_new, args.x_new, languages)
