@@ -11,21 +11,26 @@ def create_datafiles(y_data, x_data, filename_y, filename_x, lang_codes):
     """
     with open(y_data, encoding='utf-8') as labels:
         with open(x_data, encoding='utf-8') as data:
-            for label_line, data_line in zip(labels, data):
+            for index, label_line, data_line in enumerate(zip(labels, data)):
                 file_x = open(filename_x,"a+", encoding='utf-8')
                 file_y = open(filename_y,"a+", encoding='utf-8') 
                 label_line = re.sub(r'(\n)', '', label_line)  # Remove newlines
                 data_line = re.sub(r'(\n)', '', data_line)
                 if label_line in lang_codes:  # Get selected languages
                     if len(data_line) < 100:  # remove any instances that have less than 100 characters
-                        return
+                        break
                     data_line = [ch for ch in data_line]
                     data_line = data_line[:100]  # ignore everything past the first 100 characters
-                    data_line = ("").join(data_line) + "\n"
+                    data_line = ("").join(data_line)
                     #print(data_line)
                     file_x.write(data_line)
-                    file_y.write(label_line + "\n")   
-    
+                    file_y.write(label_line)  
+
+                    if index == len(labels) - 1:
+                        break
+                    file_x.write("\n")
+                    file_y.write("\n")
+
     file_x.close()
     file_y.close() 
 

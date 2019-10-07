@@ -1,7 +1,7 @@
 import torch
 from sklearn.model_selection import train_test_split
+from torch.nn.utils.rnn import pad_sequence
 
-from utils import create_prefixes, encodings, padding
 
 def load_data(x_datafile, y_datafile):
     """Loads the data and labels from the files when selecting languages.
@@ -37,6 +37,10 @@ def create_encoding(X, y, vocab):
     """ Creates padded prefixes for the sentences and converts the int labels to tensors. """
     data = []
     labels = []
+    for l in y:
+        tensor_label = torch.LongTensor(l)
+        labels.append(tensor_label)
+
     for sentence in X:
         if len(sentence) == 0: # In case file is saved with ending newline
             return
@@ -47,10 +51,6 @@ def create_encoding(X, y, vocab):
         padded_sents = padding(sents_encodings)
         data.append(padded_sents)
 
-    for l in y:
-        tensor_label = torch.LongTensor(l)
-        labels.append(tensor_label)
-
     return data, labels
 
 
@@ -60,3 +60,36 @@ def split_data(X,Y, test_size=0.2):
     X_train, X_test, y_train, y_test = splits
 
     return X_train, X_test, y_train, y_test
+
+def create_prefixes(sentence):
+    """ 
+    Creates a hundred instances representing prefixes of one sentence. Returns a list of the prefixes. 
+    """
+    padded_sents = []
+    sent_str = ""
+    for s in (sentence):
+        sent_str += s
+        padded_sents.append(sent_str)
+
+    return padded_sents
+
+
+def encodings(vocab, sentence):
+    """"
+    Encoding by mapping each character in a sentence to a correspoding index in a vocabulary.
+    """
+    encoded = [vocab[ch] for ch in sentence]
+    encoded_tensor = torch.LongTensor(encoded)
+
+    return encoded_tensor
+
+
+def padding(encoded_tensors):
+    """ 
+    Pads a list of tensors with zeros.
+    """
+    #print("Length of tensors: ", len(encoded_tensors))
+    padded_tensors = pad_sequence(encoded_tensors, batch_first=True, padding_value=0)
+
+    return padded_tensors
+
