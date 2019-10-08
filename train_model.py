@@ -1,10 +1,11 @@
 import argparse
 import time
+
 import torch
+from torch.utils import data
+
 from dataloader import Dataset
-
-
-from get_data import create_encoding, load_data, get_vocab, split_data
+from get_data import create_encoding, get_vocab, load_data, split_data, gen_data
 from model import GRUNet
 
 print("Loading data...")
@@ -23,54 +24,30 @@ print("Splitting data...")
 X_train, X_test, y_train, y_test = split_data(X,y)
 print("Finished splitting data.")
 
-
 print("Encoding training data...")
 X_encoded = create_encoding(X_train, vocab)
-print("Finishing processing training data.")
-
-#print(type(X_encoded[0]), type(y_encoded[0]))
 
 # Network parameters
 vocab_size = len(vocab) + 1
 input_size = len(X_encoded)
-hidden_size = 300
+hidden_size = 200
 output_size = 10 # number of languages
 seq_len = len(X_encoded[0])
-
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Generate data
-def gen_data(X,y):
-    d = []
-    l = []
-    for data, label in zip(X,y):            
-        for sentence in data:
-            #print(sentence)
-            for padded_seq in sentence:
-                d.append(padded_seq)
-                l.append(label)
-  
-    return d, l
-
-
-X_gen,y_gen = gen_data(X_encoded,y_train) 
-
-train_set = Dataset(X_gen[:200], y_gen[:200])
-
-
-
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+print("Generating data...")
+X_gen,y_gen = gen_data(X_encoded,y_train)
+training_set  = Dataset(X_gen, y_gen)
+training_generator = data.DataLoader(training_set, batch_size=50,shuffle=True)
+print("Finishing processing training data.")
 
 print("Initilizing network model...")
 model = GRUNet(device,vocab_size,seq_len,input_size,hidden_size,output_size)
 model.init_model(device,vocab_size,seq_len,input_size,hidden_size,output_size)
 
-
-
-
-
-
-#print("Training the network...")
-#model.train(train_set, epochs=50)
+print("Training the network...")
+model.train(training_generator, model, len(vocab) , epochs=50)
 
 
 

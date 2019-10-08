@@ -5,7 +5,6 @@ class Dataset(data.Dataset):
     def __init__(self, data, labels):
         self.data = data
         self.labels = labels
-        
 
     def __len__(self):
         """Denotes the total number of samples"""

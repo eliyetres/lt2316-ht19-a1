@@ -95,3 +95,13 @@ def padding(encoded_tensors):
     print(padded_tensors)
     return padded_tensors
 
+
+def gen_data(X,y):
+    d = []
+    l = []
+    for data, label in zip(X,y):            
+        for sentence in data:
+            d.append(sentence)
+            l.append(label)
+  
+    return d, l
