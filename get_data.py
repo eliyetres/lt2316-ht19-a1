@@ -36,13 +36,6 @@ def get_vocab(data):
 def create_encoding(X, vocab):
     """ Creates padded prefixes for the sentences and converts the int labels to tensors. """
     data = []
-    # labels = []
-    # print(y)
-    # for l in y:
-    #     tensor_label = torch.LongTensor(l)
-    #     labels.append(tensor_label)
-    #     print(tensor_label)
-
     for sentence in X:
         if len(sentence) == 0: # In case file is saved with ending newline
             return
@@ -92,7 +85,7 @@ def padding(encoded_tensors):
     """
     #print("Length of tensors: ", len(encoded_tensors))
     padded_tensors = pad_sequence(encoded_tensors, batch_first=True, padding_value=0)
-    print(padded_tensors)
+
     return padded_tensors
 
 

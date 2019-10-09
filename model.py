@@ -48,6 +48,10 @@ class GRUNet(nn.Module):
         # A linear layer to apply linear transformation to the output features from the RNN module.   
         self.linear = nn.Linear(self.hidden_size*seq_len, output_size)
 
+
+    def set_dev(self, device):
+        self.device = device
+
     def init_model(self, device,vocab_size, seq_len, input_size,  hidden_size, output_size, num_layers=2, dropout=0, lr=0.01):
         model = GRUNet(device,vocab_size=vocab_size, seq_len=seq_len,  input_size=input_size,  
                        hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, dropout=dropout, lr=lr)
@@ -75,34 +79,33 @@ class GRUNet(nn.Module):
         # The sentence as indices goes directly into the embedding layer,
         # which selects randomly-initialized vectors corresponding to the
         # indices.      
-        output, hidden = self.gru(output, hidden_layer)        
-
+        output, hidden = self.gru(output, hidden_layer)       
         output = output.contiguous().view(-1, self.hidden_size*len(X[0])) # here?
-
         output = self.linear(output)        
         return output
 
     #def train(self, X_batch, y_batch, lr=0.01, epochs=20):
-    def train(self, dataloader, model, vocab_size, lr=0.01, epochs=20):
+    #def train(self, dataloader, model, vocab_size, lr=0.01, epochs=20):
+    def train(self, X_batch, y_batch, model, vocab_size, lr=0.01, epochs=20):
         model = model.to(self.device)
+        model.set_dev(self.device)
 
         print("Training batch...")
         for epoch in range(epochs):
             print("Epoch: ", epoch+1)
             #for local_batch, local_labels in dataloader:
-            for local_batch, local_labels in dataloader:
-                #print("labels: ",local_labels)
-                #print("data: ", local_batch)
-                # Push to GPU
-                local_batch = local_batch.to(self.device)   
-                local_labels = local_labels.to(self.device)                 
-                # set the gradients to 0 before backpropagation
-                self.optimizer.zero_grad()                
-                # do the forward pass
-                output = model(local_batch) # forward
-                # compute loss
-                loss = self.criterion(output, local_labels)
-                # compute gradients            
-                loss.backward() 
-                # update weights
-                self.optimizer.step()
+            # Push to GPU
+            X_batch = X_batch.to(self.device)   
+            y_batch = y_batch.to(self.device)                 
+            # set the gradients to 0 before backpropagation
+            self.optimizer.zero_grad()                
+            # do the forward pass
+            output = model(X_batch) # forward
+            # compute loss
+            loss = self.criterion(output, y_batch)
+            # compute gradients            
+            loss.backward() 
+            # update weights
+            self.optimizer.step()
+
+        print("Loss: {}".format(loss.item()))
