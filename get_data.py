@@ -34,7 +34,7 @@ def get_vocab(data):
     return vocab
 
 def create_encoding(X, vocab):
-    """ Creates padded prefixes for the sentences and converts the int labels to tensors. """
+    """ Creates padded prefixes for the sentences """
     data = []
     for sentence in X:
         if len(sentence) == 0: # In case file is saved with ending newline
@@ -47,14 +47,6 @@ def create_encoding(X, vocab):
         data.append(padded_sents)
 
     return data
-
-
-def split_data(X,Y, test_size=0.2, shuffle=True):
-    """ Splits data into training and test data by percentages, default test size is 20 %"""
-    splits = train_test_split(X, Y, test_size=0.2, shuffle=True)
-    X_train, X_test, y_train, y_test = splits
-
-    return X_train, X_test, y_train, y_test
 
 def create_prefixes(sentence):
     """ 

@@ -5,12 +5,13 @@ import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import pickle
 
 torch.manual_seed(1)
 
-
-
+def load_pickle(filename):
+    pickle_load = pickle.load(open(filename, 'rb'))
+    return pickle_load
 
 def yield_batches(iterable, batch_size):
     """ Splits the data into batches using yield
@@ -27,12 +28,12 @@ def yield_batches(iterable, batch_size):
         yield iterable[ndx:min(ndx + batch_size, endpoint)]
 
 
-def cross_entropy_cat(self, X,y, epsil=1e-12):  
+def cross_entropy_cat(X,y, epsil=1e-12):  
     """
     Function for calculating cross entropy, probably very bad
     """          
     m = y.shape[0]
-    p = torch.softmax(X+epsil, dim=1)                                                                                                                                   
+    p = torch.softmax(X+epsil, dim=1)
     # Extracting softmax probability of the correct label for each sample
     log_likelihood = -torch.log(p[range(m),y]+epsil)    # added epsil to avoid log(0)
     loss = torch.sum(log_likelihood)/m

@@ -20,19 +20,9 @@ def train_model():
     vocab = get_vocab(X)
     print("Finishing loading data.")
 
-    ###########
-    #print(type(X[0]), type(y[0]))
-    #print(len(X), len(y))
-    #X = X[:200]
-    #y = y[:200]
-    ##########
-
-    print("Splitting data...")
-    X_train, X_test, y_train, y_test = split_data(X,y)
-    print("Finished splitting data.")
-
     print("Encoding training data...")
-    X_encoded = create_encoding(X_train, vocab)
+    X_encoded = create_encoding(X, vocab)
+    print("Finished encoding training data.")
 
     # Network parameters
     vocab_size = len(vocab) + 1
@@ -41,7 +31,7 @@ def train_model():
     output_size = 10 # number of languages
     seq_len = len(X_encoded[0])
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    if device == "cpu": 
+    if device == "cpu": # is using GPU, pin Dataloader to memory
         pin_memory = False
     else:
         pin_memory = True
@@ -49,7 +39,7 @@ def train_model():
 
     # Generate data
     print("Generating data...")
-    X_gen,y_gen = gen_data(X_encoded,y_train)
+    X_gen,y_gen = gen_data(X_encoded,y)
     print("Number of sentences: ", len(X_gen))
     training_set  = Dataset(X_gen, y_gen)
     #training_generator = data.DataLoader(training_set, 200, shuffle=True)
@@ -66,8 +56,12 @@ def train_model():
         #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=100)
         model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs)
 
+    # Save model and vocabulary integer mappings to disk
     with open(args.model_name, 'wb+') as tmf:
-                pickle.dump(model, tmf)
+        pickle.dump(model, tmf)
+    with open("vocab", 'wb+') as f_voc:
+        pickle.dump(vocab, f_voc)
+    print("Vocabulary integer mappings saved to the file {}".format("vocab"))
     print("A trained model is saved to the file {}".format(args.model_name))
 
 parser = argparse.ArgumentParser(description="Trains the model.")
@@ -82,16 +76,11 @@ parser.add_argument("-l", "--hidden_size", metavar="L", dest="hidden_size", type
 
 args = parser.parse_args()
 
-
-
 # Sanity checks
 if args.epochs < 0:
     exit("Error: Number of epochs can't be negative")
 
 if args.learning_rate < 0 or args.learning_rate > 1:
     exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01")
-
-# if args.batch >= len(args.x_file):
-#     exit("Error: training batch must be lower than total training data.")
 
 train_model()
