@@ -15,7 +15,7 @@ from time import gmtime
 
 def train_model():
     print("Loading data...")
-    #X, y = load_data("x.txt","y.txt")
+    #X, y = load_data("x_small.txt","y_small.txt")
     X, y = load_data(args.x_file, args.y_file)
     vocab = get_vocab(X)
     print("Finishing loading data.")
@@ -35,14 +35,13 @@ def train_model():
         pin_memory = False
     else:
         pin_memory = True
-        #print("Current device: ", torch.cuda.current_device())
 
     # Generate data
     print("Generating data...")
     X_gen,y_gen = gen_data(X_encoded,y)
     print("Number of sentences: ", len(X_gen))
     training_set  = Dataset(X_gen, y_gen)
-    #training_generator = data.DataLoader(training_set, 200, shuffle=True)
+    #training_generator = data.DataLoader(training_set, 200,pin_memory=pin_memory, shuffle=True)
     training_generator = data.DataLoader(training_set, args.batch_size, pin_memory=pin_memory, shuffle=True)
     print("Finishing processing training data.")
 
@@ -52,9 +51,8 @@ def train_model():
 
     print("Training the network...")
     for i, (local_batch, local_labels) in enumerate(training_generator):
-        #print(local_labels)   
-        print("Batch number {} of {}".format(i,len(X_gen)/args.batch_size))   
-        #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=100)
+        print("Batch number {} of {}".format(i+1,len(X_gen)/args.batch_size))   
+        #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=20)
         model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs)
 
     # Save model and vocabulary integer mappings to disk

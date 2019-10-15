@@ -56,8 +56,8 @@ class GRUNet(nn.Module):
         model = GRUNet(device,vocab_size=vocab_size, seq_len=seq_len,  input_size=input_size,  
                        hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, dropout=dropout, lr=lr)
         # Defining loss function and optimizer
-        # This criterion combines LogSoftmax and NLLLoss in one single class.
-        self.criterion = nn.CrossEntropyLoss()
+        # CrossEntropyLoss combines LogSoftmax and NLLLoss in one single class.
+        self.criterion = nn.CrossEntropyLoss(reduction='none')
         self.optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
         return model
@@ -79,44 +79,54 @@ class GRUNet(nn.Module):
         # The sentence as indices goes directly into the embedding layer,
         # which selects randomly-initialized vectors corresponding to the
         # indices.      
-        output, hidden = self.gru(output, hidden_layer)       
-        output = output.contiguous().view(-1, self.hidden_size*len(X[0])) # here?
+        output, hidden_layer = self.gru(output, hidden_layer)       
+        output = output.contiguous().view(-1, self.hidden_size*len(X[0]))
         output = self.linear(output)        
-        return output
+        return output.to(self.device)
 
     def train(self, X_batch, y_batch, model, vocab_size, lr=0.01, epochs=20):
         model = model.to(self.device)
         model.set_dev(self.device)
 
         print("Training batch...")
-        for epoch in range(epochs):
-            print("Epoch: ", epoch+1)
-            #for local_batch, local_labels in dataloader:
-            # Push to GPU
-            X_batch = X_batch.to(self.device)   
+        for epoch in range(epochs):            
+            #print("Epoch: ", epoch+1)
+            X_batch = X_batch.to(self.device)   # Push to GPU
             y_batch = y_batch.to(self.device)
                         
             # set the gradients to 0 before backpropagation
             self.optimizer.zero_grad()                
             # do the forward pass
             output = model(X_batch) # forward
-            # compute loss
-            loss = self.criterion(output, y_batch)
-
             
+            # count integers(characters in prefix) in tensor
             prefix_len = []
-            for prefix in y_batch:
-                char_len = torch.nonzero(prefix) # measure number of chars  
-                prefix_len.append(char_len.size(0))
-            prefix_len = torch.LongTensor(prefix_len)
+            for prefix in X_batch:
+                char_len = torch.nonzero(prefix.data).size(0) 
+                prefix_len.append(char_len)
+
+            prefix_len = torch.FloatTensor(prefix_len)
             prefix_len = prefix_len.to(self.device)
 
-            # loss*(numberof char/sentence, 100
-            loss = loss * (prefix_len/len(X_batch[0]))
+            
+            # compute loss
+            loss = self.criterion(output,y_batch)
 
-            # compute gradients            
-            loss.backward() 
+            #print(y_batch.size())
+            #print(prefix_len.size())
+            #print(loss.size())
+            
+            #loss*=prefix_len
+            #loss*(number of char/sentence len
+            loss*=(prefix_len/len(X_batch[0]))
+                     
+            # compute gradients   
+            #loss.backward()         
+            #loss.sum().backward()
+            loss.mean().backward() # avg loss
+
             # update weights
             self.optimizer.step()
 
-        print("Loss: {}".format(loss.item()))
+        #print("Loss sum:{}".format(loss.sum()))
+        print("Loss mean: {}".format(loss.mean()))
