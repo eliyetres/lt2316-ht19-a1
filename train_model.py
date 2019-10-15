@@ -8,10 +8,10 @@ import torch
 from torch.utils import data
 
 from dataloader import Dataset
-from get_data import (create_encoding, gen_data, get_vocab, load_data,
-                      split_data)
+from get_data import (create_encoding, gen_data, get_vocab, load_data)
 from model import GRUNet
-
+from time import strftime
+from time import gmtime
 
 def train_model():
     print("Loading data...")
@@ -35,7 +35,7 @@ def train_model():
         pin_memory = False
     else:
         pin_memory = True
-        print("Current device: ", torch.cuda.current_device())
+        #print("Current device: ", torch.cuda.current_device())
 
     # Generate data
     print("Generating data...")
@@ -51,7 +51,8 @@ def train_model():
     model.init_model(device,vocab_size,seq_len,input_size,hidden_size,output_size)
 
     print("Training the network...")
-    for i, (local_batch, local_labels) in enumerate(training_generator):   
+    for i, (local_batch, local_labels) in enumerate(training_generator):
+        #print(local_labels)   
         print("Batch number {} of {}".format(i,len(X_gen)/args.batch_size))   
         #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=100)
         model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs)
@@ -80,7 +81,15 @@ args = parser.parse_args()
 if args.epochs < 0:
     exit("Error: Number of epochs can't be negative")
 
+    
+
 if args.learning_rate < 0 or args.learning_rate > 1:
     exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01")
 
+stop = time.time()
 train_model()
+start = time.time()
+training_time = strftime("%H:%M:%S", gmtime(stop-start))
+print("Time it took to train the model: ", training_time)
+
+# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 200

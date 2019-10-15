@@ -58,6 +58,8 @@ for sentence, label in zip(X_gen,y_gen):
             # for each testing instance, print whether at any character prefix length, the most probable class was the correct one.
             if prediction == label:
                 print("Correct!", prediction, label)
+            else:
+                print("Incorrect!", prediction, label)
     
 
 # for sentence in X_test:

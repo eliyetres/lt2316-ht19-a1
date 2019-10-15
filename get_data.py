@@ -29,7 +29,7 @@ def load_data(x_datafile, y_datafile):
 def get_vocab(data):
     """ Gets the vocabulary for the sentences """
     sents = [[x for x in sent] for sent in data]
-    vocab = {f:i for i,f in enumerate(sorted(list(set(sum(sents, [])))))}
+    vocab = {f:i+1 for i,f in enumerate(sorted(list(set(sum(sents, [])))))}
 
     return vocab
 
@@ -88,5 +88,5 @@ def gen_data(X,y):
         for sentence in data:
             d.append(sentence)
             l.append(label)
-  
+
     return d, l

@@ -84,8 +84,6 @@ class GRUNet(nn.Module):
         output = self.linear(output)        
         return output
 
-    #def train(self, X_batch, y_batch, lr=0.01, epochs=20):
-    #def train(self, dataloader, model, vocab_size, lr=0.01, epochs=20):
     def train(self, X_batch, y_batch, model, vocab_size, lr=0.01, epochs=20):
         model = model.to(self.device)
         model.set_dev(self.device)
@@ -96,13 +94,26 @@ class GRUNet(nn.Module):
             #for local_batch, local_labels in dataloader:
             # Push to GPU
             X_batch = X_batch.to(self.device)   
-            y_batch = y_batch.to(self.device)                 
+            y_batch = y_batch.to(self.device)
+                        
             # set the gradients to 0 before backpropagation
             self.optimizer.zero_grad()                
             # do the forward pass
             output = model(X_batch) # forward
             # compute loss
             loss = self.criterion(output, y_batch)
+
+            
+            prefix_len = []
+            for prefix in y_batch:
+                char_len = torch.nonzero(prefix) # measure number of chars  
+                prefix_len.append(char_len.size(0))
+            prefix_len = torch.LongTensor(prefix_len)
+            prefix_len = prefix_len.to(self.device)
+
+            # loss*(numberof char/sentence, 100
+            loss = loss * (prefix_len/len(X_batch[0]))
+
             # compute gradients            
             loss.backward() 
             # update weights
