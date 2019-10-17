@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import TensorDataset
+from utils import my_cross_entropy
 
 
 class GRUNet(nn.Module):
@@ -74,6 +75,8 @@ class GRUNet(nn.Module):
         
     def forward(self, X): # X is a batch
         output = self.embedding(X)      
+        print("output")
+        print(output.size())
         hidden_layer = self.init_hidden(len(X[0]))
         hidden_layer = hidden_layer.to(self.device)
         # The sentence as indices goes directly into the embedding layer,
@@ -111,8 +114,12 @@ class GRUNet(nn.Module):
             prefix_len = torch.LongTensor(prefix_len)
             prefix_len = prefix_len.to(self.device)
 
+                        
+            loss=my_cross_entropy(output,y_batch,prefix_len)
+
+
             # loss*(numberof char/sentence, 100
-            loss = loss * (prefix_len/len(X_batch[0]))
+            #loss = loss * (prefix_len/len(X_batch[0]))
 
             # compute gradients            
             loss.backward() 
