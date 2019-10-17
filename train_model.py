@@ -73,6 +73,7 @@ parser.add_argument("-b", "--batch_size", metavar="B", dest="batch_size", type=i
 parser.add_argument("-e", "--epochs", metavar="E", dest="epochs", type=int,default=20, help="Number or epochs used for training the neural network (default 20).")
 parser.add_argument("-r", "--learning_rate", metavar="R", dest="learning_rate", type=float, default=0.01, help="Optimizer learning rate (default 0.01).")
 parser.add_argument("-l", "--hidden_size", metavar="L", dest="hidden_size", type=int, default=200, help="The size of the hidden layer (default 200).")
+parser.add_argument("-t", "--loss_type", metavar="T", dest="loss_type", type=int, default=1, help="Loss type function to use  (default 1).")
 
 args = parser.parse_args()
 

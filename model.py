@@ -33,7 +33,7 @@ class GRUNet(nn.Module):
                                                      for the last time-step t.
     """
 
-    def __init__(self, device, vocab_size, seq_len, input_size, hidden_size, output_size, num_layers=2, dropout=0, lr=0.01):
+    def __init__(self, device, vocab_size, seq_len, input_size, hidden_size, output_size, num_layers=2, dropout=0, lr=0.01, loss_type=1):
         super(GRUNet, self).__init__()
         # Define parameters
         print("Defining parameters...")
@@ -43,6 +43,7 @@ class GRUNet(nn.Module):
         self.output_size = output_size
         self.num_layers = num_layers
         self.lr = lr
+        self.loss_type=loss_type
         # Define layers
         self.embedding = nn.Embedding(vocab_size, input_size)       
         self.gru = nn.GRU(input_size, hidden_size, num_layers, dropout=dropout)        
@@ -53,9 +54,9 @@ class GRUNet(nn.Module):
     def set_dev(self, device):
         self.device = device
 
-    def init_model(self, device,vocab_size, seq_len, input_size,  hidden_size, output_size, num_layers=2, dropout=0, lr=0.01):
+    def init_model(self, device,vocab_size, seq_len, input_size,  hidden_size, output_size, num_layers=2, dropout=0, lr=0.01,loss_type=1):
         model = GRUNet(device,vocab_size=vocab_size, seq_len=seq_len,  input_size=input_size,  
-                       hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, dropout=dropout, lr=lr)
+                       hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, dropout=dropout, lr=lr, loss_type=loss_type)
         # Defining loss function and optimizer
         # CrossEntropyLoss combines LogSoftmax and NLLLoss in one single class.
         self.criterion = nn.CrossEntropyLoss()
@@ -100,18 +101,19 @@ class GRUNet(nn.Module):
             # do the forward pass
             output = model(X_batch) # forward
             
-            # count integers(characters in prefix) in tensor
-            prefix_len = []
-            for prefix in y_batch:
-                char_len = torch.nonzero(prefix) # measure number of chars  
-                prefix_len.append(char_len.size(0))
-            prefix_len = torch.LongTensor(prefix_len)
-            prefix_len = prefix_len.to(self.device)
-
-            
             # compute loss
-            #loss = self.criterion(output,y_batch)
-            loss=my_cross_entropy(output,y_batch,prefix_len)
+            if self.loss_type == 1:
+                loss = self.criterion(output,y_batch)
+            else:
+                # count integers(characters in prefix) in tensor
+                prefix_len = []
+                for prefix in y_batch:
+                    char_len = torch.nonzero(prefix) # measure number of chars  
+                    prefix_len.append(char_len.size(0))
+                prefix_len = torch.LongTensor(prefix_len)
+                prefix_len = prefix_len.to(self.device)
+
+                loss=my_cross_entropy(output,y_batch,prefix_len)
 
             #loss*=(prefix_len/len(X_batch[0]))
                      
