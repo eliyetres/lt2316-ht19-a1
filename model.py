@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import TensorDataset
+from utils import my_cross_entropy
 
 
 class GRUNet(nn.Module):
@@ -57,7 +58,7 @@ class GRUNet(nn.Module):
                        hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, dropout=dropout, lr=lr)
         # Defining loss function and optimizer
         # CrossEntropyLoss combines LogSoftmax and NLLLoss in one single class.
-        self.criterion = nn.CrossEntropyLoss(reduction='none')
+        self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
         return model
@@ -101,32 +102,25 @@ class GRUNet(nn.Module):
             
             # count integers(characters in prefix) in tensor
             prefix_len = []
-            for prefix in X_batch:
-                char_len = torch.nonzero(prefix.data).size(0) 
-                prefix_len.append(char_len)
-
-            prefix_len = torch.FloatTensor(prefix_len)
+            for prefix in y_batch:
+                char_len = torch.nonzero(prefix) # measure number of chars  
+                prefix_len.append(char_len.size(0))
+            prefix_len = torch.LongTensor(prefix_len)
             prefix_len = prefix_len.to(self.device)
 
             
             # compute loss
-            loss = self.criterion(output,y_batch)
+            #loss = self.criterion(output,y_batch)
+            loss=my_cross_entropy(output,y_batch,prefix_len)
 
-            #print(y_batch.size())
-            #print(prefix_len.size())
-            #print(loss.size())
-            
-            #loss*=prefix_len
-            #loss*(number of char/sentence len
-            loss*=(prefix_len/len(X_batch[0]))
+            #loss*=(prefix_len/len(X_batch[0]))
                      
             # compute gradients   
-            #loss.backward()         
+            loss.backward()         
             #loss.sum().backward()
-            loss.mean().backward() # avg loss
+            #loss.mean().backward() # avg loss
 
             # update weights
             self.optimizer.step()
 
-        #print("Loss sum:{}".format(loss.sum()))
-        print("Loss mean: {}".format(loss.mean()))
+        print("Loss: {}".format(loss.item()))

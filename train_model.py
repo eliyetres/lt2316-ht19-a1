@@ -55,9 +55,10 @@ def train_model():
         #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=20)
         model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs)
 
-    # Save model and vocabulary integer mappings to disk
+    # Save model to disk
     with open(args.model_name, 'wb+') as tmf:
         pickle.dump(model, tmf)
+    # Save vocabulary integer mappings to disk
     with open("vocab", 'wb+') as f_voc:
         pickle.dump(vocab, f_voc)
     print("Vocabulary integer mappings saved to the file {}".format("vocab"))
@@ -77,12 +78,13 @@ args = parser.parse_args()
 
 # Sanity checks
 if args.epochs < 0:
-    exit("Error: Number of epochs can't be negative")
+    exit("Error: Number of epochs can't be negative.")
 
-    
+if args.hidden_size < 0:
+    exit("Error: Size of hidden layer can't be negative.")
 
 if args.learning_rate < 0 or args.learning_rate > 1:
-    exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01")
+    exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01.")
 
 stop = time.time()
 train_model()
@@ -90,4 +92,4 @@ start = time.time()
 training_time = strftime("%H:%M:%S", gmtime(stop-start))
 print("Time it took to train the model: ", training_time)
 
-# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 200
+# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 300
