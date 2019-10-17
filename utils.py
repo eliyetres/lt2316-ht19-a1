@@ -51,8 +51,16 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4d14225ec44e80eae76bde770f5ba87cb23561fe
 def my_cross_entropy(output, label, prefix):
     x_terms = -torch.gather(output, 1, label.unsqueeze(1)).squeeze()
     log_terms = torch.log(torch.sum(torch.exp(output), dim=1))
     prefixes = torch.gather(prefix, 0, label).float()
+<<<<<<< HEAD
     return torch.mean((x_terms+log_terms)*prefixes/len(output))
+=======
+    return torch.mean((x_terms+log_terms)*prefixes)
+>>>>>>> 4d14225ec44e80eae76bde770f5ba87cb23561fe

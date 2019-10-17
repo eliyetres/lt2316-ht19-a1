@@ -15,7 +15,7 @@ from time import gmtime
 
 def train_model():
     print("Loading data...")
-    #X, y = load_data("x.txt","y.txt")
+    #X, y = load_data("x_small.txt","y_small.txt")
     X, y = load_data(args.x_file, args.y_file)
     vocab = get_vocab(X)
     print("Finishing loading data.")
@@ -35,14 +35,13 @@ def train_model():
         pin_memory = False
     else:
         pin_memory = True
-        #print("Current device: ", torch.cuda.current_device())
 
     # Generate data
     print("Generating data...")
     X_gen,y_gen = gen_data(X_encoded,y)
     print("Number of sentences: ", len(X_gen))
     training_set  = Dataset(X_gen, y_gen)
-    #training_generator = data.DataLoader(training_set, 200, shuffle=True)
+    #training_generator = data.DataLoader(training_set, 200,pin_memory=pin_memory, shuffle=True)
     training_generator = data.DataLoader(training_set, args.batch_size, pin_memory=pin_memory, shuffle=True)
     print("Finishing processing training data.")
 
@@ -52,14 +51,14 @@ def train_model():
 
     print("Training the network...")
     for i, (local_batch, local_labels) in enumerate(training_generator):
-        #print(local_labels)   
-        print("Batch number {} of {}".format(i,len(X_gen)/args.batch_size))   
-        #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=100)
+        print("Batch number {} of {}".format(i+1,len(X_gen)/args.batch_size))   
+        #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=20)
         model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs)
 
-    # Save model and vocabulary integer mappings to disk
+    # Save model to disk
     with open(args.model_name, 'wb+') as tmf:
         pickle.dump(model, tmf)
+    # Save vocabulary integer mappings to disk
     with open("vocab", 'wb+') as f_voc:
         pickle.dump(vocab, f_voc)
     print("Vocabulary integer mappings saved to the file {}".format("vocab"))
@@ -74,17 +73,19 @@ parser.add_argument("-b", "--batch_size", metavar="B", dest="batch_size", type=i
 parser.add_argument("-e", "--epochs", metavar="E", dest="epochs", type=int,default=20, help="Number or epochs used for training the neural network (default 20).")
 parser.add_argument("-r", "--learning_rate", metavar="R", dest="learning_rate", type=float, default=0.01, help="Optimizer learning rate (default 0.01).")
 parser.add_argument("-l", "--hidden_size", metavar="L", dest="hidden_size", type=int, default=200, help="The size of the hidden layer (default 200).")
+parser.add_argument("-t", "--loss_type", metavar="T", dest="loss_type", type=int, default=1, help="Loss type function to use  (default 1).")
 
 args = parser.parse_args()
 
 # Sanity checks
 if args.epochs < 0:
-    exit("Error: Number of epochs can't be negative")
+    exit("Error: Number of epochs can't be negative.")
 
-    
+if args.hidden_size < 0:
+    exit("Error: Size of hidden layer can't be negative.")
 
 if args.learning_rate < 0 or args.learning_rate > 1:
-    exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01")
+    exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01.")
 
 stop = time.time()
 train_model()
@@ -92,4 +93,4 @@ start = time.time()
 training_time = strftime("%H:%M:%S", gmtime(stop-start))
 print("Time it took to train the model: ", training_time)
 
-# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 200
+# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 300
