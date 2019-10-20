@@ -76,8 +76,6 @@ class GRUNet(nn.Module):
         
     def forward(self, X): # X is a batch
         output = self.embedding(X)      
-        print("output")
-        print(output.size())
         hidden_layer = self.init_hidden(len(X[0]))
         hidden_layer = hidden_layer.to(self.device)
         # The sentence as indices goes directly into the embedding layer,
@@ -88,7 +86,7 @@ class GRUNet(nn.Module):
         output = self.linear(output)        
         return output.to(self.device)
 
-    def train(self, X_batch, y_batch, model, vocab_size, lr=0.01, epochs=20):
+    def train(self, X_batch, y_batch, model, vocab_size, lr=0.01, epochs=20, loss_type=1):
         model = model.to(self.device)
         model.set_dev(self.device)
 
@@ -104,46 +102,27 @@ class GRUNet(nn.Module):
             output = model(X_batch) # forward
             
             # compute loss
-            if self.loss_type == 1:
-                loss = self.criterion(output,y_batch)
-            else:
-                # count integers(characters in prefix) in tensor
+            if loss_type == 1:
+            loss = self.criterion(output,y_batch)
+            if loss_type == 2:
+            # count integers(characters in prefix) in tensor
                 prefix_len = []
+                vocab_len = []
                 for prefix in y_batch:
                     char_len = torch.nonzero(prefix) # measure number of chars  
                     prefix_len.append(char_len.size(0))
+                    vocab_len.append(len(X_batch[0]))
                 prefix_len = torch.LongTensor(prefix_len)
                 prefix_len = prefix_len.to(self.device)
-
-                loss=my_cross_entropy(output,y_batch,prefix_len)
-
-            #loss*=(prefix_len/len(X_batch[0]))
-                     
+                vocab_len= torch.LongTensor(vocab_len)
+                vocab_len = vocab_len.to(self.device)
+                
+                loss*(prefix_len/vocab_len)     
             # compute gradients   
             loss.backward()         
             #loss.sum().backward()
             #loss.mean().backward() # avg loss
 
-<<<<<<< HEAD
-            
-            prefix_len = []
-            for prefix in y_batch:
-                char_len = torch.nonzero(prefix) # measure number of chars  
-                prefix_len.append(char_len.size(0))
-            prefix_len = torch.LongTensor(prefix_len)
-            prefix_len = prefix_len.to(self.device)
-
-                        
-            loss=my_cross_entropy(output,y_batch,prefix_len)
-
-
-            # loss*(numberof char/sentence, 100
-            #loss = loss * (prefix_len/len(X_batch[0]))
-
-            # compute gradients            
-            loss.backward() 
-=======
->>>>>>> 4d14225ec44e80eae76bde770f5ba87cb23561fe
             # update weights
             self.optimizer.step()
 

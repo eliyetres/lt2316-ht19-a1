@@ -28,7 +28,7 @@ def train_model():
     vocab_size = len(vocab) + 1
     input_size = len(X_encoded)
     hidden_size = args.hidden_size
-    output_size = 10 # number of languages
+    output_size = len(list(set(y))) # number of languages
     seq_len = len(X_encoded[0])
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     if device == "cpu": # is using GPU, pin Dataloader to memory
@@ -53,7 +53,7 @@ def train_model():
     for i, (local_batch, local_labels) in enumerate(training_generator):
         print("Batch number {} of {}".format(i+1,len(X_gen)/args.batch_size))   
         #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=20)
-        model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs)
+        model.train(local_batch, local_labels, model, len(vocab), args.learning_rate, args.epochs, args.loss_type)
 
     # Save model to disk
     with open(args.model_name, 'wb+') as tmf:
@@ -92,5 +92,4 @@ train_model()
 start = time.time()
 training_time = strftime("%H:%M:%S", gmtime(stop-start))
 print("Time it took to train the model: ", training_time)
-
-# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 300
+# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 200 -e 20 -r 0.1 -l 300 -r 1
