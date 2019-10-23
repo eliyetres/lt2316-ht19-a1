@@ -1,3 +1,4 @@
+import pickle
 import random
 import re
 import sys
@@ -5,62 +6,123 @@ import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pickle
+from torch.nn.utils.rnn import pad_sequence
 
-torch.manual_seed(1)
+
+def load_data(x_datafile, y_datafile):
+    """Loads the data and labels from the files when selecting languages.
+
+    Arguments:
+        x_datafile {file} -- File containing data
+        y_datafile {file} -- File containing labels
+
+    Returns:
+        X:      list -- Data
+        Y:      list -- Labels
+        vocab:  dict -- The character vocabulary
+    """
+    Y = []
+    X = []
+    labels = open(y_datafile, "r", encoding='utf-8').read().split("\n")
+    data = open(x_datafile, "r", encoding='utf-8').read().split("\n")
+    # create indices for labels
+    languages = {f: i for i, f in enumerate(sorted(list(set(labels))))}
+    for label_line, data_line in zip(labels, data):
+        Y.append(languages[label_line])
+        X.append(data_line)
+
+    return X, Y, languages
+
 
 def load_pickle(filename):
+    """ Loads a pickled file """
     pickle_load = pickle.load(open(filename, 'rb'))
     return pickle_load
 
-def yield_batches(iterable, batch_size):
-    """ Splits the data into batches using yield
-    
-    Arguments:
-        iterable {function} -- range(start,end)
-        batch_size {int} -- The size of each batch
 
-        Example: for x in batches(range(0, 10), 100):
+def convert_time(start, stop):
+    """Converts time to h/m/s """
+    total_seconds = stop-start
+    seconds = total_seconds % (24 * 3600)
+    hour = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+
+    return round(hour), round(minutes), round(seconds)
+
+
+def get_vocab(data):
+    """ Gets the vocabulary for the sentences """
+    sents = [[x for x in sent] for sent in data]
+    vocab = {f: i+1 for i, f in enumerate(sorted(list(set(sum(sents, [])))))}
+
+    return vocab
+
+
+def create_encoding(X, vocab):
+    """ Creates padded prefixes for the sentences """
+    data = []
+    for sentence in X:
+        if len(sentence) == 0:  # In case file is saved with ending newline
+            return
+        sentence_prefixes = create_prefixes(sentence)
+        sents_encodings = []
+        for sent in sentence_prefixes:
+            sents_encodings.append(encodings(vocab, sent))
+        padded_sents = padding(sents_encodings)
+        data.append(padded_sents)
+
+    return data
+
+
+def create_prefixes(sentence):
+    """ 
+    Creates a hundred instances representing prefixes of one sentence. Returns a list of the prefixes. 
     """
-    endpoint = len(iterable)
-    for ndx in range(0, endpoint, batch_size):
+    padded_sents = []
+    sent_str = ""
+    for s in (sentence):
+        sent_str += s
+        padded_sents.append(sent_str)
 
-        yield iterable[ndx:min(ndx + batch_size, endpoint)]
+    return padded_sents
 
 
-def cross_entropy_cat(X,y, epsil=1e-12):  
+def encodings(vocab, sentence):
+    """"
+    Encoding by mapping each character in a sentence to a correspoding index in a vocabulary.
     """
-    Function for calculating cross entropy, probably very bad
-    """          
-    m = y.shape[0]
-    p = torch.softmax(X+epsil, dim=1)
-    # Extracting softmax probability of the correct label for each sample
-    log_likelihood = -torch.log(p[range(m),y]+epsil)    # added epsil to avoid log(0)
-    loss = torch.sum(log_likelihood)/m
+    encoded = []
+    for ch in sentence:
+        try:
+            encoded.append(vocab[ch])
+        except KeyError:
+            encoded.append(0)
+    encoded_tensor = torch.LongTensor(encoded)
 
-    return loss
+    return encoded_tensor
 
 
-def str2bool(v):
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+def padding(encoded_tensors):
+    """ 
+    Pads a list of tensors with zeros.
+    """
+    padded_tensors = pad_sequence(
+        encoded_tensors, batch_first=True, padding_value=0)
 
-<<<<<<< HEAD
-=======
+    return padded_tensors
 
->>>>>>> 4d14225ec44e80eae76bde770f5ba87cb23561fe
-def my_cross_entropy(output, label, prefix):
-    x_terms = -torch.gather(output, 1, label.unsqueeze(1)).squeeze()
-    log_terms = torch.log(torch.sum(torch.exp(output), dim=1))
-    prefixes = torch.gather(prefix, 0, label).float()
-<<<<<<< HEAD
-    return torch.mean((x_terms+log_terms)*prefixes/len(output))
-=======
-    return torch.mean((x_terms+log_terms)*prefixes)
->>>>>>> 4d14225ec44e80eae76bde770f5ba87cb23561fe
+
+def gen_data(X, y):
+    """
+    Generates a list of all sentences for each list of n prefixes.
+    """
+    d = []
+    l = []
+    for data, label in zip(X, y):
+        for sentence in data:
+            d.append(sentence)
+            l.append(label)
+
+    return d, l
