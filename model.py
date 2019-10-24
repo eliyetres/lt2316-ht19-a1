@@ -32,10 +32,9 @@ class GRUNet(nn.Module):
                                                      for the last time-step t.
     """
 
-    def __init__(self, device, vocab_size, seq_len, input_size, hidden_size, output_size, num_layers=2, dropout=0, lr=0.01, loss_type=1):
+    def __init__(self, device, vocab_size, seq_len, input_size, hidden_size, output_size, num_layers=1, dropout=0, lr=0.1, loss_type=2):
         super(GRUNet, self).__init__()
         # Define parameters
-        print("Defining parameters...")
         self.device = torch.device(device)
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -52,7 +51,7 @@ class GRUNet(nn.Module):
     def set_dev(self, device):
         self.device = device
 
-    def init_model(self, device, vocab_size, seq_len, input_size,  hidden_size, output_size, num_layers=2, dropout=0, lr=0.01, loss_type=1):
+    def init_model(self, device, vocab_size, seq_len, input_size,  hidden_size, output_size, num_layers=1, dropout=0, lr=0.1, loss_type=2):
         model = GRUNet(device, vocab_size=vocab_size, seq_len=seq_len,  input_size=input_size,
                        hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, dropout=dropout, lr=lr, loss_type=loss_type)
         # Defining loss function and optimizer
@@ -68,41 +67,34 @@ class GRUNet(nn.Module):
         return torch.zeros(self.num_layers, seq_len, self.hidden_size).to(self.device)
 
     def forward(self, X, seq_len):  # X is a batch
-        # def forward(self, X, hidden_layer):
-
         output = self.embedding(X)
-
         hidden_layer = self.init_hidden(seq_len)
-
         hidden_layer = hidden_layer.to(self.device)
         # The sentence as indices goes directly into the embedding layer,
         # which selects randomly-initialized vectors corresponding to the
         # indices.
-
-        self.gru.flatten_parameters()  # don't know why I need this
+        self.gru.flatten_parameters()  # memory error if I don't use this
         output, hidden_layer = self.gru(output, hidden_layer)
 
         output = output.contiguous().view(-1, self.hidden_size*len(X[0]))
         output = self.linear(output)
         return output.to(self.device)
 
-    # def train(self, X_batch, y_batch, model, vocab_size,  lr=0.01, epochs=20, loss_type=1):
-    def train(self, X_batch, y_batch, model, vocab_size, seq_len, lr=0.01, epochs=20, loss_type=1):
+    def train_network(self, X_batch, y_batch, model, vocab_size, seq_len, lr=0.1, epochs=20, loss_type=1):
+        model.train()
         model = model.to(self.device)
         model.set_dev(self.device)
-        #hidden_layer = model.init_hidden(hidden_layer_size)
-        #rint("hidden layer size:", hidden_layer_size)
 
         print("Training batch...")
         for epoch in range(epochs):
-            #print("Epoch: ", epoch+1)
+            #print("Epoch: {}".format(epoch+1)
             X_batch = X_batch.to(self.device)   # Push to GPU
             y_batch = y_batch.to(self.device)
 
             # set the gradients to 0 before backpropagation
             self.optimizer.zero_grad()
             # do the forward pass
-            output = model(X_batch, seq_len)  # forward
+            output = model(X_batch, seq_len)
 
             prefix_len = []
             vocab_len = []
@@ -126,7 +118,7 @@ class GRUNet(nn.Module):
                 loss *= (prefix_len/vocab_len)
                 loss = loss.mean()
 
-            # additive loss not including character prefix
+            # additive loss including character prefix
             if loss_type == 3:
                 loss = self.criterion(output, y_batch)
                 loss += prefix_len
@@ -137,5 +129,6 @@ class GRUNet(nn.Module):
 
             # update weights
             self.optimizer.step()
+            print("Loss {}".format(loss))
 
         print("Loss: {}".format(loss.item()))

@@ -1,14 +1,13 @@
-# LT2316 Machine Learning GU 2019
 # Assignment #1: language identification with as few characters as possible
 
 ## Part 0: choosing "your" GPU
 
-The GPU is cuda:0. 
+The GPU is cuda:0.
 The script will check if cuda is available, and then select `cuda:0`, if unavailable it will default to `cpu`.
 
 ## Part 1: data preparation
 
-### Languages:
+### Languages
 
 * Swedish
 * Danish
@@ -27,12 +26,12 @@ I chose languages from similar language families, all the Scandinavian languages
 
 The training and test files can be generated using the script create_data.py.
 
-* `--showall`: Lists all the languages and their language codes
-* `y_file`: path to the file with language labels for training
-* `x_file`: path to the file with sentences for training
-* `y_new`: name of new file with labels saved to disk
-* `x_new`: name of new file with sentences saved to disk
-* `languages`: Selected languages codes, separated by comma
+* `--showall`: Lists all the languages and their language codes.
+* `y_file`: path to the file with language labels for training.
+* `x_file`: path to the file with sentences for training.
+* `y_new`: name of new file with labels saved to disk.
+* `x_new`: name of new file with sentences saved to disk.
+* `languages`: Selected languages codes, separated by comma.
 
 The generated files in the for training and test files in the repo:
 
@@ -51,11 +50,11 @@ The network model is trained by running the script `train_model.py` using the pa
 
 * `--m`: The name of the network model.
 * `--x_file`: File name of the language data.
-* `--y_file` :File name of the language labels.
+* `--y_file`: File name of the language labels.
 * `--vo`: File name of the vocabulary saved to disk.
-* `--b` :Batch size used for for training the neural network (default 100).
+* `--b`: Batch size used for for training the neural network (default 100).
 * `--e`: Number or epochs used for training the neural network (default 20).
-* `--r` :Optimizer learning rate (default 0.1).
+* `--r`: Optimizer learning rate (default 0.1).
 * `--l`: The size of the hidden layer (default 200).
 * `--t`: Loss type function to use (default 1) The loss functions are 1,2 and 3.
 ** Loss 1: Pytorch CrossEntropyLoss without reduction.
@@ -79,13 +78,14 @@ When the model has finished training, the model is saved to disk togeather with 
 ### Testing
 
 The script will check if cuda is available, and then select `cuda:0`, if unavailable it will select `cpu`.
-It loads the test data and labels and the vocabulary. 
+It loads the test data and labels and the vocabulary.
 
 For each sentence, the  prefixes and padding are done using the same functions as in training. For each sentence, an instance of n (length of sentence) prefixes are created and used for testing. The n prefixes are matched with the language label and fed into a dataloader (the reason for this was because it kept having the wrong shape otherwise) and it does not shuffle the data. Then, it tries to predict each prefix. If the prefix is correctly classified, the loop breaks and the testing continues with the next sentence. This turned out to make the testing considerably shorter, as some sentences were correctly predicted at the first character.
 
 For every language, it saves all the predictions and the correct results. If a language was correctly predicted, the prefix number at which it was correct is also saved, otherwise the instance will be `None`. At a correct classification, the result is printed in the terminal.
 
 The results for every language are saved as:
+
 * Predicted
 * Correct
 * Percent of correctly predicted
@@ -100,49 +100,23 @@ The tabels show how many sentences that were correcly classified, at what percen
 
 #### Loss 1
 
-| Language           | Correct | % correct | Avg prefix | Never |
-|--------------------|---------|-----------|------------|-------|
-| Swedish            |         |           |            |       |
-| Icelandic          |         |           |            |       |
-| Danish             |         |           |            |       |
-| Norwegian (Bokmål) |         |           |            |       |
-| Faroese            |         |           |            |       |
-| English            |         |           |            |       |
-| Welsh              |         |           |            |       |
-| German             |         |           |            |       |
-| Old English        |         |           |            |       |
-| Arabic             |         |           |            |       |
-  
 #### Loss 2
 
-| Language           | Correct | % correct | Avg prefix | Never |
-|--------------------|---------|-----------|------------|-------|
-| Swedish            |         |           |            |       |
-| Icelandic          |         |           |            |       |
-| Danish             |         |           |            |       |
-| Norwegian (Bokmål) |         |           |            |       |
-| Faroese            |         |           |            |       |
-| English            |         |           |            |       |
-| Welsh              |         |           |            |       |
-| German             |         |           |            |       |
-| Old English        |         |           |            |       |
-| Arabic             |         |           |            |       |
+| Language           | Correct | Total | % correct | Avg prefix | Never |
+|--------------------|---------|-------|-----------|------------|-------|
+| Old English        | 337     | 500   | 67        | 39         | 163   |
+| Arabic             | 500     | 500   | 100       | 1          | 0     |
+| Welsh              | 375     | 500   | 75        | 13         | 125   |
+| Danish             | 73      | 500   | 14        | 11         | 427   |
+| German             | 241     | 500   | 48        | 20         | 259   |
+| English            | 98      | 500   | 19        | 8          | 402   |
+| Faroese            | 152     | 500   | 30        | 16         | 348   |
+| Icelandic          | 114     | 500   | 22        | 19         | 386   |
+| Norwegian (Bokmål) | 88      | 500   | 17        | 14         | 412   |
+| Swedish            | 92      | 500   | 18        | 13         | 408   |
 
 #### Loss 3
 
-| Language           | Correct | % correct | Avg prefix | Never |
-|--------------------|---------|-----------|------------|-------|
-| Swedish            |         |           |            |       |
-| Icelandic          |         |           |            |       |
-| Danish             |         |           |            |       |
-| Norwegian (Bokmål) |         |           |            |       |
-| Faroese            |         |           |            |       |
-| English            |         |           |            |       |
-| Welsh              |         |           |            |       |
-| German             |         |           |            |       |
-| Old English        |         |           |            |       |
-| Arabic             |         |           |            |       |
-
-## Part Bonus A: mini-batching 
+## Part Bonus A: mini-batching
 
 ## Part Bonus B: GRUCell (7 points)

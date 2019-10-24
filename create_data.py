@@ -71,3 +71,6 @@ create_datafiles(args.y_file, args.x_file, args.y_new, args.x_new, args.language
 print("Finished writing data")
 
 #python create_data.py -y_file data/y_train.txt -x_file data/x_train.txt -y_new y_small.txt -x_new x_small.txt -languages swe,ara,isl
+
+#python create_data.py -y_file data/y_train.txt -x_file data/x_train.txt -y_new y_train.txt -x_new x_train.txt -languages swe,cym,ang,ara,dan,eng,nob,isl,fao,deu
+#python create_data.py -y_file data/y_test.txt -x_file data/x_test.txt -y_new y_test.txt -x_new x_test.txt -languages swe,cym,ang,ara,dan,eng,nob,isl,fao,deu

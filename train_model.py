@@ -13,10 +13,10 @@ from model import GRUNet
 from utils import create_encoding, gen_data, get_vocab, load_data, convert_time
 
 
-def train_model():
+def train_network_model():
     print("Loading data...")
     #X, y = load_data("x_small.txt","y_small.txt")
-    X, y,languages = load_data(args.x_file, args.y_file)
+    X, y,_ = load_data(args.x_file, args.y_file)
     vocab = get_vocab(X)
     print("Finishing loading data.")
 
@@ -30,7 +30,6 @@ def train_model():
     hidden_size = args.hidden_size
     output_size = len(list(set(y)))  # number of languages
     seq_len = len(X_encoded[0])
-    print("seq len : ", seq_len)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     if device == "cpu":  # is using GPU, pin Dataloader to memory
         pin_memory = False
@@ -57,7 +56,7 @@ def train_model():
     for i, (local_batch, local_labels) in enumerate(training_generator):
         print("Batch number {} of {}".format(i+1, len(X_gen)/args.batch_size))
         #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=20)
-        model.train(local_batch, local_labels, model, len(vocab),
+        model.train_network(local_batch, local_labels, model, len(vocab),
                     seq_len, args.learning_rate, args.epochs, args.loss_type)
 
     # Save model to disk
@@ -107,9 +106,12 @@ if args.loss_type not in [1, 2, 3]:
     exit("Error: Loss types are 1, 2 or 3.")
 
 stop = time.time()
-train_model()
+train_network_model()
 start = time.time()
 
 print("Time it took to train the model: ", convert_time(start,stop))
-# python train_model.py -m trained_model -x x_small.txt -y y_small.txt -b 400 -e 20 -r 0.1 -l 300 -t 2
+# python train_model.py -m trained_model -x x_train_small.txt -y y_train_small.txt -vo vocab -b 600 -e 20 -r 1 -l 200 -t 2
 # python train_model.py -m trained_model_all_2 -x x_train.txt -y y_train.txt -vo vocab_all -b 800 -e 30 -l 300 -t 2
+
+
+#python train_model.py -m small_model -x x_train_small.txt -y y_train_small.txt -vo vocab -b 200 -e 60 -r 1 -l 200 -t 2

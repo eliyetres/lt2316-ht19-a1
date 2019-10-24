@@ -1,0 +1,18 @@
+                 ang  ara  cym  dan  deu  eng  fao  isl  nob  swe
+Correct          345  500  226   85  193  113  216  106   96   68
+Total            500  500  500  500  500  500  500  500  500  500
+%                 69  100   45   17   38   22   43   21   19   13
+Avg prefix len    41    1    9   13   16    8   20   17   15   10
+Never predicted  155    0  274  415  307  387  284  394  404  432
+
+     Correct  Total    %  Avg prefix len  Never predicted
+ang      345    500   69              41              155
+ara      500    500  100               1                0
+cym      226    500   45               9              274
+dan       85    500   17              13              415
+deu      193    500   38              16              307
+eng      113    500   22               8              387
+fao      216    500   43              20              284
+isl      106    500   21              17              394
+nob       96    500   19              15              404
+swe       68    500   13              10              432
