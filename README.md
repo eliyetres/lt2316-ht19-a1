@@ -119,4 +119,6 @@ The tabels show how many sentences that were correcly classified, at what percen
 
 ## Part Bonus A: mini-batching
 
+There is an option of feeding the data into the model using batches. One batch is one prefix of a sentence. Since the data is already generated and put into a dataloader, the data is shuffeled before it's fed into the model.
+
 ## Part Bonus B: GRUCell (7 points)
