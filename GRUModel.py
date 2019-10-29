@@ -78,8 +78,9 @@ class GRUNet(nn.Module):
             output.to(self.device)
             prefix_len = []
             vocab_len = []
+            # measure number of chars in prefix
             for prefix in X_batch:
-                char_len = torch.nonzero(prefix)  # measure number of chars
+                char_len = torch.nonzero(prefix)  
                 prefix_len.append(char_len.size(0))
                 vocab_len.append(len(X_batch[0]))
             prefix_len = torch.FloatTensor(prefix_len)

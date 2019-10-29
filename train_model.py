@@ -3,23 +3,32 @@ import os
 import pickle
 import sys
 import time
-from time import gmtime, strftime
-
+from datetime import datetime 
+from collections import Counter
 import torch
 from torch.utils import data
+import pandas as pd
+import torch
+import torch.nn as nn
+from torch.optim import Adam
 
 from dataloader import Dataset
 from model import GRUNet
-from utils import create_encoding, gen_data, get_vocab, load_data, convert_time
+from utils import create_encoding, gen_data, get_vocab, load_data
 
+# Set seed
+torch.manual_seed(23)
 
 def train_network_model():
     print("Loading data...")
-    #X, y = load_data("x_small.txt","y_small.txt")
-    X, y,_ = load_data(args.x_file, args.y_file)
+    X, y, languages = load_data(args.x_file, args.y_file)
     vocab = get_vocab(X)
+    languages_names = list(languages.keys())
+    language_items = dict(Counter(sorted(y)))
     print("Finishing loading data.")
-
+    print("Number of sentences for each language:")
+    for lang,no in language_items.items(): 
+        print("{}:{:>5}".format(languages_names[lang],no))
     print("Encoding training data...")
     X_encoded = create_encoding(X, vocab)
     print("Finished encoding training data.")
@@ -28,8 +37,10 @@ def train_network_model():
     vocab_size = len(vocab) + 1
     input_size = len(X_encoded)
     hidden_size = args.hidden_size
-    output_size = len(list(set(y)))  # number of languages
+    output_size = len(languages_names)  # number of languages
     seq_len = len(X_encoded[0])
+    batch_size = args.batch_size
+    num_layers = 1
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     if device == "cpu":  # is using GPU, pin Dataloader to memory
         pin_memory = False
@@ -39,25 +50,33 @@ def train_network_model():
     # Generate data
     print("Generating data...")
     X_gen, y_gen = gen_data(X_encoded, y)
-    print("Number of sentences: ", len(X_gen))
+    print("Total number of sentences with prefixes: ", len(X_gen))
     training_set = Dataset(X_gen, y_gen)
-    #training_generator = data.DataLoader(training_set, 200,pin_memory=pin_memory, shuffle=True)
     training_generator = data.DataLoader(
-        training_set, args.batch_size, pin_memory=pin_memory, shuffle=True)
+        training_set, batch_size, pin_memory=pin_memory, shuffle=True)
     print("Finishing processing training data.")
 
     print("Initilizing network model...")
-    model = GRUNet(device, vocab_size, seq_len,
-                   input_size, hidden_size, output_size)
-    model.init_model(device, vocab_size, seq_len,
-                     input_size, hidden_size, output_size)
-
+    model = GRUNet(device, vocab_size=vocab_size, seq_len=seq_len,  input_size=input_size,
+                       hidden_size=hidden_size, output_size=output_size, num_layers=num_layers, loss_type=args.loss_type)
+    # Defining loss function and optimizer
+    # CrossEntropyLoss combines LogSoftmax and NLLLoss in one single class.
+    criterion = nn.CrossEntropyLoss(reduction='none')
+    criterion_mean = nn.CrossEntropyLoss(reduction='mean')
+    optimizer = torch.optim.Adam(model.parameters(), args.lr)
+    
+    model.to(device)
+    model.train() # initiate training
+    #train_before = [p.clone().detach()  for p in model.parameters()]
     print("Training the network...")
     for i, (local_batch, local_labels) in enumerate(training_generator):
-        print("Batch number {} of {}".format(i+1, len(X_gen)/args.batch_size))
-        #model.train(local_batch, local_labels, model, len(vocab), lr=0.1, epochs=20)
-        model.train_network(local_batch, local_labels, model, len(vocab),
-                    seq_len, args.learning_rate, args.epochs, args.loss_type)
+        print("Batch number {} of {}".format(i+1, len(X_gen)/batch_size))
+        model.train_network(local_batch, local_labels, model, optimizer,criterion,criterion_mean, len(vocab),
+                    batch_size, args.lr, args.epochs, args.loss_type)
+    #train_after = [p.clone().detach()  for p in model.parameters()]
+    # check is parameters update after training
+    #for p,pp in zip(train_before,train_after):
+        #print(torch.eq(p, pp))
 
     # Save model to disk
     with open(args.model_name, 'wb+') as tmf:
@@ -65,8 +84,8 @@ def train_network_model():
     # Save vocabulary integer mappings to disk
     with open(args.vocab_name, 'wb+') as f_voc:
         pickle.dump(vocab, f_voc)
-    print("Vocabulary integer mappings saved to the file {}".format("vocab"))
-    print("A trained model is saved to the file {}".format(args.model_name))
+    print("Vocabulary integer mappings saved to: {}.".format(args.vocab_name))
+    print("A trained model is saved to: {}.".format(args.model_name))
 
 
 parser = argparse.ArgumentParser(description="Trains the model.")
@@ -83,7 +102,7 @@ parser.add_argument("-b", "--batch_size", metavar="B", dest="batch_size", type=i
                     default=100, help="Batch size used for for training the neural network (default 100).")
 parser.add_argument("-e", "--epochs", metavar="E", dest="epochs", type=int, default=20,
                     help="Number or epochs used for training the neural network (default 20).")
-parser.add_argument("-r", "--learning_rate", metavar="R", dest="learning_rate",
+parser.add_argument("-r", "--lr", metavar="R", dest="lr",
                     type=float, default=0.1, help="Optimizer learning rate (default 0.1).")
 parser.add_argument("-l", "--hidden_size", metavar="L", dest="hidden_size",
                     type=int, default=200, help="The size of the hidden layer (default 200).")
@@ -99,19 +118,22 @@ if args.epochs < 0:
 if args.hidden_size < 0:
     exit("Error: Size of hidden layer can't be negative.")
 
-if args.learning_rate < 0 or args.learning_rate > 1:
+if args.lr < 0 or args.lr > 1:
     exit("Error: Learning rate must be a float from 0 and lower than 1, e.g. 0.01.")
 
 if args.loss_type not in [1, 2, 3]:
     exit("Error: Loss types are 1, 2 or 3.")
 
-stop = time.time()
+start_time = datetime.now()
 train_network_model()
-start = time.time()
+time_elapsed = datetime.now() - start_time 
 
-print("Time it took to train the model: ", convert_time(start,stop))
+print("Time it took to train the model: {}".format(time_elapsed))
 # python train_model.py -m trained_model -x x_train_small.txt -y y_train_small.txt -vo vocab -b 600 -e 20 -r 1 -l 200 -t 2
 # python train_model.py -m trained_model_all_2 -x x_train.txt -y y_train.txt -vo vocab_all -b 800 -e 30 -l 300 -t 2
 
+#python train_model.py -m tiny_model_ -x processed_data/x_tiny.txt -y processed_data/y_tiny.txt -vo tiny_vocab_ -b 200 -e 60 -r 0.1 -l 200 -t 1
+#python train_model.py -m small_model_1 -x processed_data/x_train_small.txt -y processed_data/y_train_small.txt -vo vocab -b 400 -e 80 -r 0.0001 -l 200 -t 1
 
-#python train_model.py -m small_model -x x_train_small.txt -y y_train_small.txt -vo vocab -b 200 -e 60 -r 1 -l 200 -t 2
+# Loss1
+#python train_model.py -m trained_model_1 -x processed_data/x_train.txt -y processed_data/y_train.txt -vo processed_data/vocab_all -b 500 -e 50 -l 200 -t 1 -r 0.0001

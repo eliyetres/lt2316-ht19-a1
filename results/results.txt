@@ -1,0 +1,17 @@
+Classification results:
+     Correct  Total    %  Avg prefix len  Never predicted
+ara      500    500  100               1                0
+isl      230    500   46              19              270
+swe      418    500   83              31               82
+
+Predicted results per language:
+       ara   isl    swe
+ara    500     0      0
+isl  25478   230  11008
+swe  21600  1901    418
+
+Predicted results in %:
+        ara   isl    swe
+ara  100.00  0.00   0.00
+isl   69.39  0.63  29.98
+swe   90.30  7.95   1.75

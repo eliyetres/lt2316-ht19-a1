@@ -26,8 +26,9 @@ def test_model():
     #X, y, languages = load_data("x_test_small.txt", "y_test_small.txt")
     X, y, languages = load_data(args.x_file, args.y_file)
     # open the saved vocab file created in training
-    #vocab = load_pickle(args.vocab)
-    vocab = load_pickle("vocab")
+    vocab = load_pickle(args.vocab)
+    inv_vocab = {v: k for k, v in vocab.items()}
+    #vocab = load_pickle("vocab")
     print("Finishing loading data.")
 
     print("Encoding test data...")
@@ -60,7 +61,6 @@ def test_model():
         for sentence in batch:  # one sentence
             batch_sentences.append(sentence)
             batch_labels.append(b_label)
-
         test_set = Dataset(batch_sentences, batch_labels)
         test_generator = data.DataLoader(
             test_set, pin_memory=pin_memory, shuffle=False)
@@ -75,7 +75,8 @@ def test_model():
 
             char_len = torch.nonzero(sentence)  # measure number of chars
             char_len = char_len.size(0)
-            seq_len = len(sentence[0])
+            #seq_len = len(sentence[0])
+            seq_len = 1
 
             output = trained_model(sentence, seq_len)
             _, indices = torch.max(output.data, dim=1)
@@ -85,6 +86,11 @@ def test_model():
             int_ind = indices.item()
             all_labels[lang]["actual"].extend([lang])
             if indices[0] == label:  # correct prediction
+                # prints full sentence without padding
+                # including unknown characters, for debugging
+                #decoded_sent = [inv_vocab[word_index] for word_index in sentence.tolist()[0] if word_index != 0]
+                #decoded_sent = "".join(decoded_sent)
+                #print(decoded_sent) # The encoded sentence
                 print("Correcly classified sentence as {} at prefix #{}.".format(languages[int_ind], char_len))
                 all_labels[lang]["correct"] += 1
                 all_labels[lang]["predicted"].extend([int_ind])
@@ -179,11 +185,15 @@ parser.add_argument("-y", "--y_file", metavar="Y", dest="y_file",
 parser.add_argument("-vo", "--vocab", metavar="VO", dest="vocab",
                     type=str, help="The previously saved vocabulary.")
 parser.add_argument("-p", "--predictions", dest="predictions",
-                    action='store_true',help="Prints a table with a sum of all languages' predictions.")
+                    action='store_true',help="Prints a table with a sum and % of all languages' predictions.")
 
 args = parser.parse_args()
 
 test_model()
 
 # python test_model.py -m trained_model_all_2 -x x_test.txt -y y_test.txt -vo vocab_all -p
-# python test_model.py -m trained_model -x x_test_small.txt -y y_test_small.txt -vo vocab -p
+# python test_model.py -m small_model_1 -x processed_data/x_test_small.txt -y processed_data/y_test_small.txt -vo vocab -p
+
+
+#python test_model.py -m tiny_model_1 -x processed_data/x_test_small.txt -y processed_data/y_test_small.txt -vo processed_data/tiny_vocab -p
+# python test_model.py -m tiny_model_ -x processed_data/x_test_small.txt -y processed_data/y_test_small.txt -vo tiny_vocab_ -p

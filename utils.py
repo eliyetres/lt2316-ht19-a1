@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
 
 
+
 def load_data(x_datafile, y_datafile):
     """Loads the data and labels from the files when selecting languages.
 
@@ -39,24 +40,12 @@ def load_pickle(filename):
     pickle_load = pickle.load(open(filename, 'rb'))
     return pickle_load
 
-
-def convert_time(start, stop):
-    """Converts time to h/m/s """
-    total_seconds = stop-start
-    seconds = total_seconds % (24 * 3600)
-    hour = seconds // 3600
-    seconds %= 3600
-    minutes = seconds // 60
-    seconds %= 60
-
-    return round(hour), round(minutes), round(seconds)
-
-
 def get_vocab(data):
     """ Gets the vocabulary for the sentences """
     sents = [[x for x in sent] for sent in data]
-    vocab = {f: i+1 for i, f in enumerate(sorted(list(set(sum(sents, [])))))}
-
+    vocab = {f: i+2 for i, f in enumerate(sorted(list(set(sum(sents, [])))))}
+    vocab["<UNK>"] = 1  # this is the tag for unknown words, 
+    vocab["<PAD>"] = 0 # 0 is reserved for padding
     return vocab
 
 
@@ -64,8 +53,6 @@ def create_encoding(X, vocab):
     """ Creates padded prefixes for the sentences """
     data = []
     for sentence in X:
-        if len(sentence) == 0:  # In case file is saved with ending newline
-            return
         sentence_prefixes = create_prefixes(sentence)
         sents_encodings = []
         for sent in sentence_prefixes:
@@ -98,7 +85,8 @@ def encodings(vocab, sentence):
         try:
             encoded.append(vocab[ch])
         except KeyError:
-            encoded.append(0)
+            #encoded.append(0)
+            encoded.append(vocab["<UNK>"])
     encoded_tensor = torch.LongTensor(encoded)
 
     return encoded_tensor
