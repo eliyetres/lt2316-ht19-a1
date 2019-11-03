@@ -250,7 +250,7 @@ Avgerage percent correct for model: 89.5%
 I've added the option of feeding the data into the model using batches. One batch is one prefix of a sentence.
 I did a test on a smaller dataset of only 3 languages and plotted the results over 20 epochs with batches of different sizes. The loss is lower when selecting a higher batch size and the loss quickly goes down and doesn't change much.
 
-![80 batches](../results/plot80.png)
-![60 batches](../results/plot60.png)
-![40 batches](../results/plot40.png)
-![20 batches](../results/plot20.png)
+![80 batches](https://github.com/eliyetres/lt2316-ht19-a1/blob/master/results/plot80.png)
+![60 batches](https://github.com/eliyetres/lt2316-ht19-a1/blob/master/results/plot60.png)
+![40 batches](https://github.com/eliyetres/lt2316-ht19-a1/blob/master/results/plot40.png)
+![20 batches](https://github.com/eliyetres/lt2316-ht19-a1/blob/master/results/plot20.png)
