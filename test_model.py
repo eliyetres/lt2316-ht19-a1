@@ -14,7 +14,7 @@ from dataloader import Dataset
 from utils import (create_encoding, create_prefixes, gen_data, load_data,
                    load_pickle)
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 if device == "cpu":  # if using GPU, pin Dataloader to memory
     pin_memory = False
 else:
@@ -191,9 +191,4 @@ args = parser.parse_args()
 
 test_model()
 
-# python test_model.py -m trained_model_all_2 -x x_test.txt -y y_test.txt -vo vocab_all -p
-# python test_model.py -m small_model_1 -x processed_data/x_test_small.txt -y processed_data/y_test_small.txt -vo vocab -p
-
-
-#python test_model.py -m tiny_model_1 -x processed_data/x_test_small.txt -y processed_data/y_test_small.txt -vo processed_data/tiny_vocab -p
-# python test_model.py -m tiny_model_ -x processed_data/x_test_small.txt -y processed_data/y_test_small.txt -vo tiny_vocab_ -p
+# python test_model.py -m model_1 -x processed_data/x_test.txt -y processed_data/y_test.txt -vo vocab -p

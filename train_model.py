@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch.optim import Adam
 
 from dataloader import Dataset
-from model import GRUNet
+from GRUModel import GRUNet
 from utils import create_encoding, gen_data, get_vocab, load_data
 
 # Set seed
@@ -22,6 +22,8 @@ torch.manual_seed(23)
 def train_network_model():
     print("Loading data...")
     X, y, languages = load_data(args.x_file, args.y_file)
+    X = X[:-1]
+    y = y[:-1]
     vocab = get_vocab(X)
     languages_names = list(languages.keys())
     language_items = dict(Counter(sorted(y)))
@@ -67,16 +69,58 @@ def train_network_model():
     
     model.to(device)
     model.train() # initiate training
-    #train_before = [p.clone().detach()  for p in model.parameters()]
+
     print("Training the network...")
-    for i, (local_batch, local_labels) in enumerate(training_generator):
-        print("Batch number {} of {}".format(i+1, len(X_gen)/batch_size))
-        model.train_network(local_batch, local_labels, model, optimizer,criterion,criterion_mean, len(vocab),
-                    batch_size, args.lr, args.epochs, args.loss_type)
-    #train_after = [p.clone().detach()  for p in model.parameters()]
-    # check is parameters update after training
-    #for p,pp in zip(train_before,train_after):
-        #print(torch.eq(p, pp))
+    for epoch in range(args.epochs):
+        epoch_loss = 0.0
+        print("Epoch {} of {} epochs.".format(epoch, args.epochs))
+        for i, (X_batch, y_batch) in enumerate(training_generator):
+            if y_batch.size()[0] != batch_size:
+                continue
+            #print("Batch number {} of {}".format(i+1, len(X_gen)/batch_size))
+            #model.train_network(local_batch, local_labels, model, optimizer,criterion,criterion_mean, len(vocab),batch_size, args.lr, (epoch+1), args.loss_type)
+   
+            #print("Epoch: {}".format(epoch+1)
+            X_batch = X_batch.to(device)   # Push to GPU
+            y_batch = y_batch.to(device)            
+            # do the forward pass
+            output = model(X_batch, batch_size)
+            output.to(device)
+            prefix_len = []
+            #vocab_len = []
+            # measure number of chars in prefix
+            for prefix in X_batch:
+                char_len = torch.nonzero(prefix)  
+                prefix_len.append(char_len.size(0))
+                #vocab_len.append(len(X_batch[0]))
+            prefix_len = torch.FloatTensor(prefix_len)
+            prefix_len = prefix_len.to(device)
+            #vocab_len = torch.FloatTensor(vocab_len)
+            #vocab_len = vocab_len.to(device)
+            # compute loss
+            if args.loss_type == 1:
+                loss = criterion_mean(output, y_batch)
+            # loss including character prefix length
+            if args.loss_type == 2:
+                loss = criterion(output, y_batch)
+                #loss *= (prefix_len/vocab_len)
+                loss *= prefix_len
+                loss = loss.mean()
+            # additive loss including character prefix
+            if args.loss_type == 3:
+                loss = criterion(output, y_batch)
+                loss += prefix_len
+                loss = loss.mean()
+            # set the gradients to 0 before backpropagation
+            optimizer.zero_grad()
+            # calculate avg loss
+            epoch_loss += loss.item()
+            # compute gradients
+            loss.backward()
+            # update weights
+            optimizer.step()
+
+        print("Loss: {}".format(epoch_loss))
 
     # Save model to disk
     with open(args.model_name, 'wb+') as tmf:
@@ -129,11 +173,6 @@ train_network_model()
 time_elapsed = datetime.now() - start_time 
 
 print("Time it took to train the model: {}".format(time_elapsed))
-# python train_model.py -m trained_model -x x_train_small.txt -y y_train_small.txt -vo vocab -b 600 -e 20 -r 1 -l 200 -t 2
-# python train_model.py -m trained_model_all_2 -x x_train.txt -y y_train.txt -vo vocab_all -b 800 -e 30 -l 300 -t 2
 
-#python train_model.py -m tiny_model_ -x processed_data/x_tiny.txt -y processed_data/y_tiny.txt -vo tiny_vocab_ -b 200 -e 60 -r 0.1 -l 200 -t 1
-#python train_model.py -m small_model_1 -x processed_data/x_train_small.txt -y processed_data/y_train_small.txt -vo vocab -b 400 -e 80 -r 0.0001 -l 200 -t 1
-
-# Loss1
+#python train_model.py -m small_model_1 -x x_train_small.txt -y y_train_small.txt -vo vocab_small -b 400 -e 80 -r 0.0001 -l 200 -t 1
 #python train_model.py -m trained_model_1 -x processed_data/x_train.txt -y processed_data/y_train.txt -vo processed_data/vocab_all -b 500 -e 50 -l 200 -t 1 -r 0.0001
