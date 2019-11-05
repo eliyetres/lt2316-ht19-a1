@@ -44,8 +44,6 @@ The generated files in the for training and test files in the repo:
 
 ### Network model
 
-The GRU network model is in the file `model.py`. The model has an input, embedding, hidden, linear and an output layer. It contains the critera for  CrossEntropyLoss, which combines LogSoftmax and NLLLoss in one single class, with and without reduction. The data is fed into the embedding layer which creates randomly-initialized vectors corresponding to the indices in the sentences. The hidden layer is initialized with the number of layers, length of the sentence and the layer's hidden size. The loss is calculated and printed for every trained batch.
-
 The network model is trained by running the script `train_model.py` using the parameters:
 
 * `--m`: The name of the network model.
@@ -61,7 +59,18 @@ The network model is trained by running the script `train_model.py` using the pa
 ** Loss 2: CrossEntropyLoss without reduction multiplied with character prefix length (prefix lenth/sentence length).
 ** Loss 3: CrossEntropyLoss without reduction with additive character prefix length.
 
+The GRU network model is in the file `GRUModel.py`. The model has an input, embedding, hidden, linear and an output layer. It contains the critera for  CrossEntropyLoss, which combines LogSoftmax and NLLLoss in one single class, with and without reduction. The data is fed into the embedding layer which creates randomly-initialized vectors corresponding to the indices in the sentences. The hidden layer is initialized with the number of layers, length of the sentence and the layer's hidden size. The loss is calculated and printed for every trained batch.
+
 ### Training
+
+The network model is tested by running the script `test_model.py` using the parameters:
+
+* `--m`: The previously saved network model.
+* `--x_file`: File name of the language data for testing.
+* `--y_file`: File name of the language labels for testing.
+* `--vo`: The saved vocabulary file.
+* `--p`: Optional. Prints a table of all the predictions made for a language.
+
 
 The data is loaded from the selected files into training data, labels and vocabulary. The `utils.py` contains the functions for creating the  data fed into the network model.
 First, the sentences are made into prefixes, made up of one list for every following character up to the lenth of the sentence.
